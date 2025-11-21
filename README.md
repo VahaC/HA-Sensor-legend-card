@@ -50,6 +50,8 @@ legend_items:
         color: "#e74c3c"
         min: 101
 ```
+![alt text](card-image.png)
+![alt text](editor-image.png)
 
 Legend `min`/`max` values are optional; when provided they color the numeric value whenever it falls inside the defined bounds.
 Leave `icon` blank to keep the entity icon or set it to `none` to hide the icon entirely.
