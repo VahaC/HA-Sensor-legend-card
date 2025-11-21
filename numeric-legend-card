@@ -320,15 +320,15 @@ class NumericLegendCard extends LitElement {
   }
 
   /**
-   * Handle tap on the card according to tap_action config.
-   * Default (no tap_action) => more-info.
+   * Shared executor for tap / icon tap actions.
+   * If config is undefined -> default to more-info.
    */
-  _handleCardClick() {
+  _handleAction(actionConfig) {
     if (!this._config || !this.hass) return;
 
-    const tap = this._config.tap_action || { action: "more-info" };
-    const action = tap.action;
-    if (!action || action === "none") return;
+    const tap = actionConfig || { action: "more-info" };
+    const action = tap.action || "more-info";
+    if (action === "none") return;
 
     const entityId = this._config.entity;
 
@@ -354,6 +354,21 @@ class NumericLegendCard extends LitElement {
       window.open(tap.url_path, "_blank");
       return;
     }
+  }
+
+  /**
+   * Handle tap on whole card.
+   */
+  _handleCardClick() {
+    this._handleAction(this._config.tap_action);
+  }
+
+  /**
+   * Handle tap specifically on icon.
+   */
+  _handleIconClick(ev) {
+    ev.stopPropagation(); // do not trigger card click
+    this._handleAction(this._config.icon_tap_action);
   }
 
   render() {
@@ -395,9 +410,12 @@ class NumericLegendCard extends LitElement {
 
     const icon = this._getIcon(entityId, stateObj);
 
-    // If icon is null (e.g. user typed "none"), do not render icon element at all
     const iconTemplate = icon
-      ? html`<ha-icon class="icon" .icon=${icon}></ha-icon>`
+      ? html`<ha-icon
+          class="icon"
+          .icon=${icon}
+          @click=${(ev) => this._handleIconClick(ev)}
+        ></ha-icon>`
       : null;
 
     return html`
@@ -520,16 +538,35 @@ class NumericLegendCardEditor extends LitElement {
         gap: 16px;
       }
 
-      .tap-section {
+      /* Vertical spacing between blocks */
+      ha-expansion-panel {
         margin-top: 8px;
+      }
+
+      /* Add inner margin ONLY when panel is expanded */
+      ha-expansion-panel[expanded] .interactions-section,
+      ha-expansion-panel[expanded] .legend-items-section {
+        margin: 8px;
+      }
+
+      .interactions-section {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 12px;
+      }
+
+      .interactions-row {
+        margin-top: 0;
+      }
+
+      .interactions-row ha-select {
+        width: 100%;
       }
 
       .tap-helper {
         font-size: 0.8rem;
         color: var(--secondary-text-color);
+        margin-top: 4px;
       }
 
       .legend-section {
@@ -634,6 +671,9 @@ class NumericLegendCardEditor extends LitElement {
     const tap = this._config.tap_action || {};
     const tapAction = tap.action || "more-info";
 
+    const iconTap = this._config.icon_tap_action || {};
+    const iconTapAction = iconTap.action || "more-info";
+
     return html`
       <div class="card-config">
         <ha-form
@@ -646,99 +686,149 @@ class NumericLegendCardEditor extends LitElement {
         >
         </ha-form>
 
-        <div class="tap-section">
-          <ha-select
-            label="Tap behavior"
-            .value=${tapAction}
-            @selected=${this._onTapActionTypeChanged}
-            @closed=${this._stopPropagation}
-          >
-            <mwc-list-item value="more-info">
-              More info dialog (default)
-            </mwc-list-item>
-            <mwc-list-item value="toggle">Toggle entity</mwc-list-item>
-            <mwc-list-item value="navigate">Navigate</mwc-list-item>
-            <mwc-list-item value="url">Open URL</mwc-list-item>
-            <mwc-list-item value="none">Nothing</mwc-list-item>
-          </ha-select>
-          <div class="tap-helper">
-            What to do when the card is clicked. Default: more-info.
-          </div>
-
-          ${tapAction === "navigate"
-            ? html`
-                <ha-textfield
-                  label="Navigation path (e.g. /lovelace/0/)"
-                  .value=${tap.navigation_path || ""}
-                  @input=${this._onTapNavigationPathChange}
-                ></ha-textfield>
-              `
-            : ""}
-          ${tapAction === "url"
-            ? html`
-                <ha-textfield
-                  label="URL (https://...)"
-                  .value=${tap.url_path || ""}
-                  @input=${this._onTapUrlPathChange}
-                ></ha-textfield>
-              `
-            : ""}
-        </div>
-
-        <div class="legend-section">
-          <div class="legend-header">Legend items (tooltip + value color)</div>
-          <div class="legend-helper">
-            Text and color are used for tooltip. Min/Max are optional numeric
-            bounds used to color the main value:
-            <br />- both min &amp; max: inclusive range [min, max]
-            <br />- only min: value ≥ min
-            <br />- only max: value ≤ max
-          </div>
-
-          ${this._legendItems.map(
-            (item, index) => html`
-              <div class="legend-row-editor">
-                <div class="legend-row-line legend-row-line-top">
-                  <ha-textfield
-                    label="Text"
-                    .value=${item.text || ""}
-                    @input=${(ev) => this._onLegendTextChange(index, ev)}
-                  ></ha-textfield>
-                </div>
-
-                <div class="legend-row-line legend-row-line-bottom">
-                  <ha-textfield
-                    label="Color (CSS/hex)"
-                    .value=${item.color || ""}
-                    @input=${(ev) => this._onLegendColorChange(index, ev)}
-                  ></ha-textfield>
-
-                  <ha-textfield
-                    label="Min"
-                    type="number"
-                    .value=${item.min ?? ""}
-                    @input=${(ev) => this._onLegendMinChange(index, ev)}
-                  ></ha-textfield>
-
-                  <ha-textfield
-                    label="Max"
-                    type="number"
-                    .value=${item.max ?? ""}
-                    @input=${(ev) => this._onLegendMaxChange(index, ev)}
-                  ></ha-textfield>
-
-                  <button @click=${() => this._removeLegendItem(index)}>
-                    Delete
-                  </button>
-                </div>
+        <ha-expansion-panel header="Interactions" outlined>
+          <div class="interactions-section">
+            <div class="interactions-row">
+              <ha-select
+                label="Tap behavior"
+                .value=${tapAction}
+                @selected=${this._onTapActionTypeChanged}
+                @closed=${this._stopPropagation}
+              >
+                <mwc-list-item value="more-info">
+                  More info dialog (default)
+                </mwc-list-item>
+                <mwc-list-item value="toggle">Toggle entity</mwc-list-item>
+                <mwc-list-item value="navigate">Navigate</mwc-list-item>
+                <mwc-list-item value="url">Open URL</mwc-list-item>
+                <mwc-list-item value="none">Nothing</mwc-list-item>
+              </ha-select>
+              <div class="tap-helper">
+                What to do when the card is clicked.
               </div>
-            `
-          )}
 
-          <button class="add-btn" @click=${this._addLegendItem}>
-            Add item
-          </button>
-        </div>
+              ${tapAction === "navigate"
+                ? html`
+                    <ha-textfield
+                      label="Navigation path (e.g. /lovelace/0/)"
+                      .value=${tap.navigation_path || ""}
+                      @input=${this._onTapNavigationPathChange}
+                    ></ha-textfield>
+                  `
+                : ""}
+              ${tapAction === "url"
+                ? html`
+                    <ha-textfield
+                      label="URL (https://...)"
+                      .value=${tap.url_path || ""}
+                      @input=${this._onTapUrlPathChange}
+                    ></ha-textfield>
+                  `
+                : ""}
+            </div>
+
+            <div class="interactions-row">
+              <ha-select
+                label="Icon tap behavior"
+                .value=${iconTapAction}
+                @selected=${this._onIconTapActionTypeChanged}
+                @closed=${this._stopPropagation}
+              >
+                <mwc-list-item value="more-info">
+                  More info dialog (default)
+                </mwc-list-item>
+                <mwc-list-item value="toggle">Toggle entity</mwc-list-item>
+                <mwc-list-item value="navigate">Navigate</mwc-list-item>
+                <mwc-list-item value="url">Open URL</mwc-list-item>
+                <mwc-list-item value="none">Nothing</mwc-list-item>
+              </ha-select>
+              <div class="tap-helper">
+                What to do when the icon is clicked.
+              </div>
+
+              ${iconTapAction === "navigate"
+                ? html`
+                    <ha-textfield
+                      label="Icon navigation path (e.g. /lovelace/0/)"
+                      .value=${iconTap.navigation_path || ""}
+                      @input=${this._onIconTapNavigationPathChange}
+                    ></ha-textfield>
+                  `
+                : ""}
+              ${iconTapAction === "url"
+                ? html`
+                    <ha-textfield
+                      label="Icon URL (https://...)"
+                      .value=${iconTap.url_path || ""}
+                      @input=${this._onIconTapUrlPathChange}
+                    ></ha-textfield>
+                  `
+                : ""}
+            </div>
+          </div>
+        </ha-expansion-panel>
+
+        <ha-expansion-panel header="Legend items" outlined>
+          <div class="legend-items-section">
+            <div class="legend-section">
+              <div class="legend-header">
+                Legend items (tooltip + value color)
+              </div>
+              <div class="legend-helper">
+                Text and color are used for tooltip. Min/Max are optional
+                numeric bounds used to color the main value:
+                <br />- both min &amp; max: inclusive range [min, max]
+                <br />- only min: value ≥ min
+                <br />- only max: value ≤ max
+              </div>
+
+              ${this._legendItems.map(
+                (item, index) => html`
+                  <div class="legend-row-editor">
+                    <div class="legend-row-line legend-row-line-top">
+                      <ha-textfield
+                        label="Text"
+                        .value=${item.text || ""}
+                        @input=${(ev) => this._onLegendTextChange(index, ev)}
+                      ></ha-textfield>
+                    </div>
+
+                    <div class="legend-row-line legend-row-line-bottom">
+                      <ha-textfield
+                        label="Color (CSS/hex)"
+                        .value=${item.color || ""}
+                        @input=${(ev) =>
+                          this._onLegendColorChange(index, ev)}
+                      ></ha-textfield>
+
+                      <ha-textfield
+                        label="Min"
+                        type="number"
+                        .value=${item.min ?? ""}
+                        @input=${(ev) => this._onLegendMinChange(index, ev)}
+                      ></ha-textfield>
+
+                      <ha-textfield
+                        label="Max"
+                        type="number"
+                        .value=${item.max ?? ""}
+                        @input=${(ev) => this._onLegendMaxChange(index, ev)}
+                      ></ha-textfield>
+
+                      <button @click=${() => this._removeLegendItem(index)}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                `
+              )}
+
+              <button class="add-btn" @click=${this._addLegendItem}>
+                Add item
+              </button>
+            </div>
+          </div>
+        </ha-expansion-panel>
       </div>
     `;
   }
@@ -831,6 +921,51 @@ class NumericLegendCardEditor extends LitElement {
     this._config = {
       ...this._config,
       tap_action: {
+        ...oldTap,
+        action: "url",
+        url_path,
+      },
+    };
+    this._fireConfigChanged();
+  }
+
+  // ---- Icon tap behavior handlers ----
+
+  _onIconTapActionTypeChanged(ev) {
+    const action = ev.target.value || "more-info";
+    const oldTap = this._config.icon_tap_action || {};
+
+    this._config = {
+      ...this._config,
+      icon_tap_action: {
+        ...oldTap,
+        action,
+      },
+    };
+
+    this._fireConfigChanged();
+  }
+
+  _onIconTapNavigationPathChange(ev) {
+    const navigation_path = ev.target.value;
+    const oldTap = this._config.icon_tap_action || { action: "navigate" };
+    this._config = {
+      ...this._config,
+      icon_tap_action: {
+        ...oldTap,
+        action: "navigate",
+        navigation_path,
+      },
+    };
+    this._fireConfigChanged();
+  }
+
+  _onIconTapUrlPathChange(ev) {
+    const url_path = ev.target.value;
+    const oldTap = this._config.icon_tap_action || { action: "url" };
+    this._config = {
+      ...this._config,
+      icon_tap_action: {
         ...oldTap,
         action: "url",
         url_path,
