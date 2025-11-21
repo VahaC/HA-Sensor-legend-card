@@ -4,7 +4,7 @@ import {
   css,
 } from "https://unpkg.com/lit@2.8.0/index.js?module";
 
-const CARD_VERSION = "0.2.4";
+const CARD_VERSION = "0.2.8";
 
 console.info(
   `%cSENSOR-LEGEND-CARD %c${CARD_VERSION}`,

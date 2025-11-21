@@ -59,7 +59,9 @@ icon: ""
 icon_tap_action:
   action: more-info
 ```
+
 ![alt text](card-image.png)
+
 ![alt text](editor-image.png)
 
 Legend `min`/`max` values are optional; when provided they color the numeric value whenever it falls inside the defined bounds.
