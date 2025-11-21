@@ -37,19 +37,19 @@ name: Living room AQI
 decimals: 1
 unit: "µg/m³"
 tap_action:
-	action: more-info
+    action: more-info
 legend_items:
-	- text: Excellent (0-50)
-		color: "#2ecc71"
-		max: 50
-	- text: Moderate (51-100)
-		color: "#f1c40f"
-		min: 51
-		max: 100
-	- text: Poor (>100)
-		color: "#e74c3c"
-		min: 101
+    - text: Excellent (0-50)
+        color: "#2ecc71"
+        max: 50
+    - text: Moderate (51-100)
+        color: "#f1c40f"
+        min: 51
+        max: 100
+    - text: Poor (>100)
+        color: "#e74c3c"
+        min: 101
 ```
 
-Legend `min`/`max` values are optional; when provided they color the numeric value whenever it falls inside the defined bounds. 
+Legend `min`/`max` values are optional; when provided they color the numeric value whenever it falls inside the defined bounds.
 Leave `icon` blank to keep the entity icon or set it to `none` to hide the icon entirely.
