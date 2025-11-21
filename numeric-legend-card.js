@@ -3,7 +3,7 @@
 
 import { LitElement, html, css } from "lit";
 
-const CARD_VERSION = "0.2.6";
+const CARD_VERSION = "0.2.7";
 
 console.info(
   `%cSENSOR-LEGEND-CARD %c${CARD_VERSION}`,

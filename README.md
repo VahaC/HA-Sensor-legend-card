@@ -1,5 +1,5 @@
 # Sensor Legend Card
-
+ 
 Custom Lovelace card for Home Assistant dashboards that shows a single sensor value together with a fully configurable tooltip legend. The card is compact, mobile friendly, and now ships as a HACS-compatible repository.
 
 ## Features
@@ -64,3 +64,5 @@ icon_tap_action:
 
 Legend `min`/`max` values are optional; when provided they color the numeric value whenever it falls inside the defined bounds.
 Leave `icon` blank to keep the entity icon or set it to `none` to hide the icon entirely.
+
+Prefer a more narrative walkthrough and usage ideas? The blog post has you covered: [Sensor Legend Card for Home Assistant](https://www.vahac.com/sensor-legend-card-for-home-assistant/).
