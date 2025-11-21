@@ -13,8 +13,8 @@ Custom Lovelace card for Home Assistant dashboards that shows a single sensor va
 
 ### HACS (recommended)
 1. In Home Assistant open **HACS → Frontend → ⋮ → Custom repositories**.
-2. Add this repo URL (`https://github.com/VahaC/HA-Sensor-legend-card`) and pick category **Lovelace**.
-3. After the repository appears in HACS, press **Download**. HACS will copy the whole folder into `/config/www/community/sensor-legend-card/`. Only the bundled `sensor-legend-card.js` is required at runtime; the `src/` directory contains the unbundled sources and is there just for reference.
+2. Add this repo URL (`https://github.com/VahaC/HA-Sensor-legend-card`) and pick category **Dashboard**.
+3. After the repository appears in HACS, press **Download**. 
 4. Restart Home Assistant (or click **Reload resources**) so the new resource is picked up.
 5. Add the resource automatically via HACS prompt or manually under **Settings → Dashboards → Resources** with:
 	 - URL: `/hacsfiles/sensor-legend-card/sensor-legend-card.js`
@@ -22,7 +22,7 @@ Custom Lovelace card for Home Assistant dashboards that shows a single sensor va
 
 ### Manual
 1. Download the latest `sensor-legend-card.js` from the releases page.
-2. Copy it to your Home Assistant `config/www/sensor-legend-card/` folder (create the folder if missing). The `src/` directory in the repo only contains development sources, so you can skip it for manual installs.
+2. Copy it to your Home Assistant `config/www/sensor-legend-card/` folder (create the folder if missing). 
 3. Add a Lovelace resource pointing to `/local/sensor-legend-card/sensor-legend-card.js` with resource type `module`.
 4. Clear browser cache or reload resources from **Developer Tools → YAML → Reload resources**.
 
@@ -32,23 +32,32 @@ Once the resource is available, add the card either through the visual editor (s
 
 ```yaml
 type: custom:sensor-legend-card
-entity: sensor.air_quality
-name: Living room AQI
-decimals: 1
-unit: "µg/m³"
-tap_action:
-    action: more-info
+decimals: 0
+entity: sensor.living_air_sensor_co2
 legend_items:
-    - text: Excellent (0-50)
-        color: "#2ecc71"
-        max: 50
-    - text: Moderate (51-100)
-        color: "#f1c40f"
-        min: 51
-        max: 100
-    - text: Poor (>100)
-        color: "#e74c3c"
-        min: 101
+  - text: ≤1000 ppm
+    color: green
+    max: 1000
+  - text: 1001–1200 ppm
+    color: yellow
+    min: 1001
+    max: 1200
+  - text: 1201–1500 ppm
+    color: orange
+    min: 1201
+    max: 1500
+  - text: ">1500 ppm"
+    color: red
+    min: 1501
+grid_options:
+  columns: 3
+  rows: 1
+name: CO₂
+tap_action:
+  action: more-info
+icon: ""
+icon_tap_action:
+  action: more-info
 ```
 ![alt text](card-image.png)
 ![alt text](editor-image.png)
