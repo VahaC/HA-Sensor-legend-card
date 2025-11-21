@@ -1,7 +1,11 @@
 // sensor-legend-card.js
 // All comments in English (per user preference)
 
-import { LitElement, html, css } from "lit";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://unpkg.com/lit@2.8.0/index.js?module";
 
 const CARD_VERSION = "0.1.0";
 
