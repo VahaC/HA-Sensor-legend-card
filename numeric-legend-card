@@ -45,7 +45,7 @@ class NumericLegendCard extends LitElement {
       .text-block {
         display: flex;
         flex-direction: column;
-        min-width: 0;              /* allow children to shrink inside flex */
+        min-width: 0; /* allow children to shrink inside flex */
       }
 
       .name {
@@ -491,6 +491,7 @@ class NumericLegendCardEditor extends LitElement {
     super();
     this._config = {};
     this._legendItems = [];
+    // Only entity stays in ha-form; the rest is in a separate expansion panel
     this._schema = [
       {
         name: "entity",
@@ -500,32 +501,6 @@ class NumericLegendCardEditor extends LitElement {
             // filter: [{ domain: "sensor" }],
           },
         },
-      },
-      {
-        name: "name",
-        required: false,
-        selector: { text: {} },
-      },
-      {
-        name: "icon",
-        required: false,
-        selector: { icon: {} },
-      },
-      {
-        name: "decimals",
-        required: false,
-        selector: {
-          number: {
-            min: 0,
-            max: 6,
-            mode: "box",
-          },
-        },
-      },
-      {
-        name: "unit",
-        required: false,
-        selector: { text: {} },
       },
     ];
   }
@@ -543,10 +518,34 @@ class NumericLegendCardEditor extends LitElement {
         margin-top: 8px;
       }
 
-      /* Add inner margin ONLY when panel is expanded */
+      /* Inner margins only when panel is expanded */
+      ha-expansion-panel[expanded] .appearance-section,
       ha-expansion-panel[expanded] .interactions-section,
       ha-expansion-panel[expanded] .legend-items-section {
         margin: 8px;
+      }
+
+      .appearance-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .appearance-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      @media (max-width: 640px) {
+        .appearance-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .field-helper {
+        font-size: 0.8rem;
+        color: var(--secondary-text-color);
       }
 
       .interactions-section {
@@ -676,6 +675,7 @@ class NumericLegendCardEditor extends LitElement {
 
     return html`
       <div class="card-config">
+        <!-- ENTITY -->
         <ha-form
           .hass=${this.hass}
           .data=${this._currentConfig}
@@ -686,6 +686,43 @@ class NumericLegendCardEditor extends LitElement {
         >
         </ha-form>
 
+        <!-- APPEARANCE -->
+        <ha-expansion-panel header="Appearance" outlined>
+          <div class="appearance-section">
+            <div class="appearance-grid">
+              <ha-textfield
+                label="Name (optional)"
+                .value=${this._config.name ?? ""}
+                @input=${this._onNameChanged}
+              ></ha-textfield>
+
+              <ha-icon-picker
+                label="Icon (optional)"
+                .value=${this._config.icon ?? ""}
+                @value-changed=${this._onIconChanged}
+              ></ha-icon-picker>
+
+              <ha-textfield
+                label="Decimals (optional)"
+                type="number"
+                .value=${this._config.decimals ?? ""}
+                @input=${this._onDecimalsChanged}
+              ></ha-textfield>
+
+              <ha-textfield
+                label="Unit (optional)"
+                .value=${this._config.unit ?? ""}
+                @input=${this._onUnitChanged}
+              ></ha-textfield>
+            </div>
+            <div class="field-helper">
+              Decimals – how many decimal places to show. Unit overrides
+              the entity unit. Type "none" as icon in YAML to hide icon.
+            </div>
+          </div>
+        </ha-expansion-panel>
+
+        <!-- INTERACTIONS -->
         <ha-expansion-panel header="Interactions" outlined>
           <div class="interactions-section">
             <div class="interactions-row">
@@ -768,6 +805,7 @@ class NumericLegendCardEditor extends LitElement {
           </div>
         </ha-expansion-panel>
 
+        <!-- LEGEND ITEMS -->
         <ha-expansion-panel header="Legend items" outlined>
           <div class="legend-items-section">
             <div class="legend-section">
@@ -836,30 +874,12 @@ class NumericLegendCardEditor extends LitElement {
   _computeLabel(schema) {
     // Hide label for entity – leave only native picker UI
     if (schema.name === "entity") return "";
-
-    if (schema.name === "name") return "Name (optional)";
-    if (schema.name === "icon") return "Icon (optional)";
-    if (schema.name === "decimals") return "Decimals (optional)";
-    if (schema.name === "unit") return "Unit (optional)";
-
     return "";
   }
 
   _computeHelper(schema) {
     if (schema.name === "entity") {
       return "Select sensor entity for numeric value (required).";
-    }
-    if (schema.name === "name") {
-      return "Custom name for the card (optional).";
-    }
-    if (schema.name === "icon") {
-      return "Override entity icon (optional). Type 'none' to hide icon.";
-    }
-    if (schema.name === "decimals") {
-      return "How many decimal places to show (optional).";
-    }
-    if (schema.name === "unit") {
-      return "Override unit shown next to the value (optional).";
     }
     return undefined;
   }
@@ -882,6 +902,52 @@ class NumericLegendCardEditor extends LitElement {
 
   _stopPropagation(ev) {
     ev.stopPropagation();
+  }
+
+  // ---- simple field handlers (Appearance) ----
+
+  _onNameChanged(ev) {
+    const name = ev.target.value;
+    this._config = {
+      ...this._config,
+      name: name || undefined,
+    };
+    this._fireConfigChanged();
+  }
+
+  _onIconChanged(ev) {
+    const icon = ev.detail?.value ?? "";
+    this._config = {
+      ...this._config,
+      icon: icon || "",
+    };
+    this._fireConfigChanged();
+  }
+
+  _onDecimalsChanged(ev) {
+    const raw = ev.target.value;
+    if (raw === "" || raw === null || raw === undefined) {
+      const { decimals, ...rest } = this._config;
+      this._config = rest;
+    } else {
+      const num = Number(raw);
+      if (!Number.isNaN(num)) {
+        this._config = {
+          ...this._config,
+          decimals: num,
+        };
+      }
+    }
+    this._fireConfigChanged();
+  }
+
+  _onUnitChanged(ev) {
+    const unit = ev.target.value;
+    this._config = {
+      ...this._config,
+      unit: unit || undefined,
+    };
+    this._fireConfigChanged();
   }
 
   // ---- Tap behavior handlers ----
