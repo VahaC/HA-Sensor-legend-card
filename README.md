@@ -14,7 +14,7 @@ Custom Lovelace card for Home Assistant dashboards that shows a single sensor va
 ### HACS (recommended)
 1. In Home Assistant open **HACS → Frontend → ⋮ → Custom repositories**.
 2. Add this repo URL (`https://github.com/VahaC/HA-Sensor-legend-card`) and pick category **Lovelace**.
-3. After the repository appears in HACS, press **Download** to pull `sensor-legend-card.js` into `/config/www/community/sensor-legend-card/`.
+3. After the repository appears in HACS, press **Download**. HACS will copy the entire folder (including the `src/` directory) into `/config/www/community/sensor-legend-card/`. If you already had an older version installed manually, delete the old folder first so nothing is left behind.
 4. Restart Home Assistant (or click **Reload resources**) so the new resource is picked up.
 5. Add the resource automatically via HACS prompt or manually under **Settings → Dashboards → Resources** with:
 	 - URL: `/hacsfiles/sensor-legend-card/sensor-legend-card.js`
@@ -23,8 +23,9 @@ Custom Lovelace card for Home Assistant dashboards that shows a single sensor va
 ### Manual
 1. Download the latest `sensor-legend-card.js` from the releases page.
 2. Copy it to your Home Assistant `config/www/sensor-legend-card/` folder (create the folder if missing).
-3. Add a Lovelace resource pointing to `/local/sensor-legend-card/sensor-legend-card.js` with resource type `module`.
-4. Clear browser cache or reload resources from **Developer Tools → YAML → Reload resources**.
+3. Make sure the `src/` folder sits next to `sensor-legend-card.js` (the card was split into multiple modules starting with v0.2.2, so both the root file and the files inside `src/` must be copied).
+4. Add a Lovelace resource pointing to `/local/sensor-legend-card/sensor-legend-card.js` with resource type `module`.
+5. Clear browser cache or reload resources from **Developer Tools → YAML → Reload resources**.
 
 ## Usage
 
