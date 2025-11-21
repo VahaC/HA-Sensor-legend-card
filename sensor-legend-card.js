@@ -1,15 +1,19 @@
-// numeric-legend-card.js
+// sensor-legend-card.js
 // All comments in English (per user preference)
 
-import {
-  LitElement,
-  html,
-  css,
-} from "https://unpkg.com/lit@2.8.0/index.js?module";
+import { LitElement, html, css } from "lit";
+
+const CARD_VERSION = "0.1.0";
+
+console.info(
+  `%cSENSOR-LEGEND-CARD %c${CARD_VERSION}`,
+  "font-weight: 700; color: #1d8ce0",
+  "font-weight: 700; color: #1a1a1a"
+);
 
 // -------------------- MAIN CARD --------------------
 
-class NumericLegendCard extends LitElement {
+class SensorLegendCard extends LitElement {
   static get properties() {
     return {
       hass: { attribute: false },
@@ -460,7 +464,7 @@ class NumericLegendCard extends LitElement {
   }
 
   static getConfigElement() {
-    return document.createElement("numeric-legend-card-editor");
+    return document.createElement("sensor-legend-card-editor");
   }
 
   static getStubConfig() {
@@ -473,11 +477,13 @@ class NumericLegendCard extends LitElement {
   }
 }
 
-customElements.define("numeric-legend-card", NumericLegendCard);
+if (!customElements.get("sensor-legend-card")) {
+  customElements.define("sensor-legend-card", SensorLegendCard);
+}
 
 // -------------------- EDITOR --------------------
 
-class NumericLegendCardEditor extends LitElement {
+class SensorLegendCardEditor extends LitElement {
   static get properties() {
     return {
       hass: { attribute: false },
@@ -647,7 +653,7 @@ class NumericLegendCardEditor extends LitElement {
 
   setConfig(config) {
     this._config = {
-      type: "custom:numeric-legend-card",
+      type: "custom:sensor-legend-card",
       decimals: 0,
       ...config,
     };
@@ -892,7 +898,7 @@ class NumericLegendCardEditor extends LitElement {
     const newConfig = {
       ...this._config,
       ...value,
-      type: "custom:numeric-legend-card",
+      type: "custom:sensor-legend-card",
       legend_items: this._legendItems,
     };
 
@@ -1141,14 +1147,17 @@ class NumericLegendCardEditor extends LitElement {
   }
 }
 
-customElements.define("numeric-legend-card-editor", NumericLegendCardEditor);
+if (!customElements.get("sensor-legend-card-editor")) {
+  customElements.define("sensor-legend-card-editor", SensorLegendCardEditor);
+}
 
 // -------------------- CARD PICKER METADATA --------------------
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "numeric-legend-card",
-  name: "Numeric Legend Card",
+  type: "sensor-legend-card",
+  name: "Sensor Legend Card",
+  version: CARD_VERSION,
   description:
     "Shows numeric sensor value with hover tooltip legend. Legend items are fully configurable, including ranges to color the value.",
 });
